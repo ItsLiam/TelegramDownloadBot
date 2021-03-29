@@ -27,6 +27,8 @@ namespace TelegramDownloadBot.Bot
                     services.AddSingleton<TelegramService>();
                     services.AddSingleton<TorrentService>();
                     services.AddSingleton<RootHandler>();
+                    services.AddSingleton<CallbackHandler>();
+                    services.AddSingleton<TransmissionService>();
                 });
     }
 }

@@ -8,7 +8,7 @@ namespace TelegramDownloadBot.Bot.Data
             : base(options)
         {
         }
-        public DbSet<CachedSearchResponse> CachedSearchResponses { get; set; }
         public DbSet<SearchResponse> SearchResponses { get; set; }
+        public DbSet<ActiveTorrent> ActiveTorrents { get; set; }
     }
 }

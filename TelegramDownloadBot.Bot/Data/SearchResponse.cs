@@ -12,5 +12,6 @@ namespace TelegramDownloadBot.Bot.Data
         public uint Seeders { get; set; }
         public uint Peers { get; set; }
         public string MagnetUrl { get; set; }
+        public string Guid { get; set; }
     }
 }

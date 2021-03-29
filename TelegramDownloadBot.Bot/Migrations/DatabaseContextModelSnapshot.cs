@@ -16,26 +16,24 @@ namespace TelegramDownloadBot.Bot.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "5.0.4");
 
-            modelBuilder.Entity("TelegramDownloadBot.Bot.Data.CachedSearchResponse", b =>
+            modelBuilder.Entity("TelegramDownloadBot.Bot.Data.ActiveTorrent", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("ChatId")
+                    b.Property<string>("ChatId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsFinished")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("OptionNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("SearchResponseId")
+                    b.Property<int>("TorrentId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SearchResponseId");
-
-                    b.ToTable("CachedSearchResponses");
+                    b.ToTable("ActiveTorrents");
                 });
 
             modelBuilder.Entity("TelegramDownloadBot.Bot.Data.SearchResponse", b =>
@@ -43,6 +41,9 @@ namespace TelegramDownloadBot.Bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("MagnetUrl")
                         .HasColumnType("TEXT");
@@ -68,15 +69,6 @@ namespace TelegramDownloadBot.Bot.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SearchResponses");
-                });
-
-            modelBuilder.Entity("TelegramDownloadBot.Bot.Data.CachedSearchResponse", b =>
-                {
-                    b.HasOne("TelegramDownloadBot.Bot.Data.SearchResponse", "SearchResponse")
-                        .WithMany()
-                        .HasForeignKey("SearchResponseId");
-
-                    b.Navigation("SearchResponse");
                 });
 #pragma warning restore 612, 618
         }

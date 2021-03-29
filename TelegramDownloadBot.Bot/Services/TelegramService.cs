@@ -9,15 +9,24 @@ namespace TelegramDownloadBot.Bot.Services
     {
         private TelegramBotClient _client;
         private RootHandler _handler;
-        
-        public TelegramService(RootHandler handler)
+        private CallbackHandler _cbHandler;
+
+        public TelegramService(RootHandler handler, CallbackHandler cbHandler)
         {
             _handler = handler;
+            _cbHandler = cbHandler;
+
             //init
             _client = new TelegramBotClient("1679074026:AAE8qQPzAQC_4sNzfDNS6Qut0mkJU7Jq7ZE");
-            
+
             //listeners
             _client.OnMessage += OnMessageReceived;
+            _client.OnCallbackQuery += OnCallbackReceived;
+        }
+
+        public TelegramBotClient Client
+        {
+            get => _client;
         }
 
         public void Start(CancellationToken token)
@@ -25,6 +34,7 @@ namespace TelegramDownloadBot.Bot.Services
             _client.StartReceiving(cancellationToken: token);
         }
 
-        void OnMessageReceived(object? sender, MessageEventArgs args) => _handler.Handle(args, _client);
+        void OnMessageReceived(object sender, MessageEventArgs args) => _handler.Handle(args, _client);
+        void OnCallbackReceived(object sender, CallbackQueryEventArgs args) => _cbHandler.Handle(args, _client);
     }
 }

@@ -9,8 +9,8 @@ using TelegramDownloadBot.Bot.Data;
 namespace TelegramDownloadBot.Bot.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20210315011144_2")]
-    partial class _2
+    [Migration("20210329055028_1")]
+    partial class _1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -18,33 +18,14 @@ namespace TelegramDownloadBot.Bot.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "5.0.4");
 
-            modelBuilder.Entity("TelegramDownloadBot.Bot.Data.CachedSearchResponse", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ChatId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("OptionNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("SearchResponseId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SearchResponseId");
-
-                    b.ToTable("CachedSearchResponses");
-                });
-
             modelBuilder.Entity("TelegramDownloadBot.Bot.Data.SearchResponse", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("MagnetUrl")
                         .HasColumnType("TEXT");
@@ -70,15 +51,6 @@ namespace TelegramDownloadBot.Bot.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SearchResponses");
-                });
-
-            modelBuilder.Entity("TelegramDownloadBot.Bot.Data.CachedSearchResponse", b =>
-                {
-                    b.HasOne("TelegramDownloadBot.Bot.Data.SearchResponse", "SearchResponse")
-                        .WithMany()
-                        .HasForeignKey("SearchResponseId");
-
-                    b.Navigation("SearchResponse");
                 });
 #pragma warning restore 612, 618
         }

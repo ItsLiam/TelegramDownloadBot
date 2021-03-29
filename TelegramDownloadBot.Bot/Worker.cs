@@ -26,8 +26,8 @@ namespace TelegramDownloadBot.Bot
             {
                 _telegram.Start(stoppingToken);
 
-
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+
                 await Task.Delay(-1, stoppingToken);
             }
         }

@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TelegramDownloadBot.Bot.Data;
 using MonoTorrent.Client;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramDownloadBot.Bot.Handlers
 {
@@ -22,87 +25,103 @@ namespace TelegramDownloadBot.Bot.Handlers
             _torrent = torrent;
             _scopeFactory = scopeFactory;
         }
-        
+
         public async void Handle(MessageEventArgs args, TelegramBotClient client)
         {
             var split = args.Message.Text.Split(" ");
-            
+
             switch (split.First())
             {
                 case "/start":
-                    await client.SendTextMessageAsync(args.Message.Chat.Id, "Hello! Welcome to my bot :D", replyToMessageId: args.Message.MessageId);
+                    await client.SendTextMessageAsync(args.Message.Chat.Id, "Hello! Welcome to my bot :D\nFor help type /help", replyToMessageId: args.Message.MessageId);
                     break;
-                case "/search":
-                {
-                    //sanitizing input string
-                    var query = split.ToList();
-                    query.RemoveAt(0);
-                    var sanitised = string.Join(' ', query);
-                    
-                    await client.SendTextMessageAsync(args.Message.Chat.Id, $"Searching for {sanitised}");
-                    var response = (await _torrent.Search(sanitised));
-                    
-                    response.Sort((a, b) => b.Seeders.CompareTo(a.Seeders));
+                case "/help":
+                    await client.SendTextMessageAsync(args.Message.Chat.Id, "COMMANDS\tEXAMPLE\n/tv {season number} {episode number}\t/tv The Blacklist S01E12");
 
-                    using var scope = _scopeFactory.CreateScope();
-                    await using var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-
-                    var count = 0;
-                    var stringed = response.Take(15).Select(r =>
+                    break;
+                case "/tv":
                     {
-                        count++;
+                        var seasonInfoRegex = new Regex(@"([Ss]?)([0-9]{1,2})([xXeE\.\-]?)([0-9]{1,2})");
 
-                        if (r.Seeders < 1) return null;
 
-                        var cached = new CachedSearchResponse()
+                        //sanitizing input string
+                        var query = split.ToList();
+                        query.RemoveAt(0);
+                        var sanitized = string.Join(' ', query);
+
+                        var data = seasonInfoRegex.Matches(sanitized).First();
+
+                        var searchingMessage = await client.SendTextMessageAsync(args.Message.Chat.Id, $"\u23F3");
+
+
+
+
+                        var aRegex = new Regex(@"[a-zA-Z]+");
+
+                        var seasonInfo = aRegex.Split(data.ToString());
+                        var season = seasonInfo[1];
+                        var episode = seasonInfo[2];
+                        var show = sanitized.Replace(data.ToString(), null);
+
+                        var searchResponse = await _torrent.SearchShow(show, int.Parse(season), int.Parse(episode));
+
+                        await client.DeleteMessageAsync(searchingMessage.Chat.Id, searchingMessage.MessageId);
+
+                        searchResponse.Sort((a, b) => b.Seeders.CompareTo(a.Seeders));
+
+                        if (searchResponse.Count < 1) await client.SendTextMessageAsync(args.Message.Chat.Id, "No results");
+
+                        var top = searchResponse.Take(5);
+
+                        var scope = _scopeFactory.CreateScope();
+                        var database = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+                        database.SearchResponses.AddRange(top);
+                        database.SaveChanges();
+
+
+                        foreach (var res in top)
                         {
-                            SearchResponse = r,
-                            OptionNumber = count,
-                            ChatId = args.Message.Chat.Id
-                        };
+                            var replyMarkup = new InlineKeyboardMarkup(
+                                InlineKeyboardButton.WithCallbackData("Download", $"download/{res.Guid}")
+                            );
 
-                        if (db == null) throw new Exception("db is null");
-                        
-                        db.CachedSearchResponses.Add(cached);
-                        db.SaveChanges();
+                            var size = ((int)res.Size).Bytes();
 
-                        return $"Option {count} | {r.Title}\n{r.Seeders} seeders";
-                    });
+                            await client.SendTextMessageAsync(args.Message.Chat.Id, $"{res.Title}\nSize: {Math.Round(size.Megabytes, 1)}MB\nSeeders: {res.Seeders}", replyMarkup: replyMarkup);
+                        }
 
-                    var message = await client.SendTextMessageAsync(args.Message.Chat.Id, $"Search results for: {sanitised}\n\n{string.Join("\n\n", stringed.Where(x => !string.IsNullOrEmpty(x)))}\n\nTo download one, type /download with the option number");
-                    
-                    
-                    break;
-                }
-                case "/download":
-                {
-                    //sanitizing input string
-                    var query = split.ToList();
-                    query.RemoveAt(0);
-                    var sanitised = string.Join(' ', query);
-
-                    var canParse = int.TryParse(sanitised, out var id);
-
-                    using var scope = _scopeFactory.CreateScope();
-                    await using var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-
-                    var selectedOption = db.CachedSearchResponses.Include(c => c.SearchResponse)
-                        .OrderBy(q => q.Id).LastOrDefault(c => (c.ChatId == args.Message.Chat.Id) && (c.OptionNumber == id));
-
-                    if (!canParse || selectedOption == null)
-                    {
-                        await client.SendTextMessageAsync(args.Message.Chat.Id, "Invalid option");
-                        return;
+                        break;
                     }
+                    // case "/download":
+                    //     {
+                    //         //sanitizing input string
+                    //         var query = split.ToList();
+                    //         query.RemoveAt(0);
+                    //         var sanitized = string.Join(' ', query);
 
-                    
-                    await client.SendTextMessageAsync(args.Message.Chat.Id, $"Downloading {selectedOption.SearchResponse.Title}");
+                    //         var canParse = int.TryParse(sanitized, out var id);
 
-                    _torrent.Download(selectedOption.SearchResponse.MagnetUrl);
-                    
-                    break;
-                }
+                    //         using var scope = _scopeFactory.CreateScope();
+                    //         await using var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+                    //         var selectedOption = db.CachedSearchResponses.Include(c => c.SearchResponse)
+                    //             .OrderBy(q => q.Id).LastOrDefault(c => (c.ChatId == args.Message.Chat.Id) && (c.OptionNumber == id));
+
+                    //         if (!canParse || selectedOption == null)
+                    //         {
+                    //             await client.SendTextMessageAsync(args.Message.Chat.Id, "Invalid option");
+                    //             return;
+                    //         }
+
+
+                    //         await client.SendTextMessageAsync(args.Message.Chat.Id, $"Downloading {selectedOption.SearchResponse.Title}");
+
+                    //         _torrent.Download(selectedOption.SearchResponse.MagnetUrl);
+
+                    //         break;
+                    //     }
             }
-        }   
+        }
     }
 }
