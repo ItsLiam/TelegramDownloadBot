@@ -113,10 +113,11 @@ namespace TelegramDownloadBot.Bot.Services
             }
             else
             {
-                torrent = MonoTorrent.Torrent.Load(new Uri(sr.MagnetUrl), "./torrents/data");
+                torrent = MonoTorrent.Torrent.Load(new Uri(sr.MagnetUrl), $".{Path.DirectorySeparatorChar}torrents/data");
             }
 
-            var torrentManager = new TorrentManager(torrent, ".\\torrents", torrentSettings);
+
+            var torrentManager = new TorrentManager(torrent, $".{Path.DirectorySeparatorChar}torrents", torrentSettings);
 
             torrentManager.TorrentStateChanged += async (object e, TorrentStateChangedEventArgs args) =>
             {
@@ -140,7 +141,7 @@ namespace TelegramDownloadBot.Bot.Services
                     foreach (var file in args.TorrentManager.Torrent.Files)
                     {
                         if (!mediaExtensions.Any(me => file.FullPath.ToUpper().Contains(me))) continue;
-
+                        System.Console.WriteLine($"uploading file {file.FullPath}");
                         using var fs = File.Open(file.FullPath, FileMode.Open);
 
                         var upload = new InputOnlineFile(fs);
@@ -167,7 +168,7 @@ namespace TelegramDownloadBot.Bot.Services
 
             _engine.StatsUpdate += (object e, StatsUpdateEventArgs args) =>
             {
-                // if ((lastCheck - DateTime.Now).TotalSeconds < 1) return;
+                if ((lastCheck - DateTime.Now).TotalMinutes < 1) return;
 
                 var speed = (_engine.TotalDownloadSpeed).Bytes();
 
