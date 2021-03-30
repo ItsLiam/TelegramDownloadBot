@@ -1,10 +1,15 @@
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Args;
+using Telegram.Bot.Types.InputFiles;
 using TelegramDownloadBot.Bot.Data;
 using Transmission.API.RPC;
+using Transmission.API.RPC.Entity;
 
 namespace TelegramDownloadBot.Bot.Services
 {
@@ -16,7 +21,7 @@ namespace TelegramDownloadBot.Bot.Services
         public TransmissionService(IServiceScopeFactory scopeFactory)
         {
             //init
-            _client = new Client("http://10.1.1.3:9091/transmission/rpc", null, "admin", "password");
+            _client = new Client("http://localhost:9091/transmission/rpc", null, "username", "password");
             _scope = scopeFactory;
 
             //listeners

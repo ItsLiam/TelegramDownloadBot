@@ -7,6 +7,6 @@ namespace TelegramDownloadBot.Bot.Data
         public int Id { get; set; }
         public int TorrentId { get; set; }
         public bool IsFinished { get; set; }
-        public string ChatId { get; set; }
+        public long ChatId { get; set; }
     }
 }

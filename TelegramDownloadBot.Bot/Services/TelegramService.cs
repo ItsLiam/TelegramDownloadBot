@@ -17,7 +17,7 @@ namespace TelegramDownloadBot.Bot.Services
             _cbHandler = cbHandler;
 
             //init
-            _client = new TelegramBotClient("1679074026:AAE8qQPzAQC_4sNzfDNS6Qut0mkJU7Jq7ZE");
+            _client = new TelegramBotClient("1679074026:AAHjWMmSNrqdElgxJAHbvAYb69sk7XgQs8Y");
 
             //listeners
             _client.OnMessage += OnMessageReceived;

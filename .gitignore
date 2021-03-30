@@ -33,6 +33,8 @@ msbuild.log
 msbuild.err
 msbuild.wrn
 
+transmission/
+
 # modules
 node_modules/
 

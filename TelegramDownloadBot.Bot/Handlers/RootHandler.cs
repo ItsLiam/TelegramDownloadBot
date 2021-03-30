@@ -28,6 +28,7 @@ namespace TelegramDownloadBot.Bot.Handlers
 
         public async void Handle(MessageEventArgs args, TelegramBotClient client)
         {
+            if (args?.Message?.Text == null) return;
             var split = args.Message.Text.Split(" ");
 
             switch (split.First())
